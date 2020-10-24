@@ -173,7 +173,8 @@ def get_batch_statistics(outputs, targets, iou_threshold):
                 if pred_label not in target_labels:
                     continue
 
-                iou, box_index = bbox_iou(pred_box.unsqueeze(0), target_boxes).max(0)
+                iou, box_index = bbox_iou(
+                    pred_box.unsqueeze(0), target_boxes).max(0)
                 if iou >= iou_threshold and box_index not in detected_boxes:
                     true_positives[pred_i] = 1
                     detected_boxes += [box_index]
@@ -202,8 +203,10 @@ def bbox_iou(box1, box2, x1y1x2y2=True):
         b2_y1, b2_y2 = box2[:, 1] - box2[:, 3] / 2, box2[:, 1] + box2[:, 3] / 2
     else:
         # Get the coordinates of bounding boxes
-        b1_x1, b1_y1, b1_x2, b1_y2 = box1[:, 0], box1[:, 1], box1[:, 2], box1[:, 3]
-        b2_x1, b2_y1, b2_x2, b2_y2 = box2[:, 0], box2[:, 1], box2[:, 2], box2[:, 3]
+        b1_x1, b1_y1, b1_x2, b1_y2 = box1[:,
+                                          0], box1[:, 1], box1[:, 2], box1[:, 3]
+        b2_x1, b2_y1, b2_x2, b2_y2 = box2[:,
+                                          0], box2[:, 1], box2[:, 2], box2[:, 3]
 
     # get the corrdinates of the intersection rectangle
     inter_rect_x1 = torch.max(b1_x1, b2_x1)
@@ -245,17 +248,20 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
         # Sort by it
         image_pred = image_pred[(-score).argsort()]
         class_confs, class_preds = image_pred[:, 5:].max(1, keepdim=True)
-        detections = torch.cat((image_pred[:, :5], class_confs.float(), class_preds.float()), 1)
+        detections = torch.cat(
+            (image_pred[:, :5], class_confs.float(), class_preds.float()), 1)
         # Perform non-maximum suppression
         keep_boxes = []
         while detections.size(0):
-            large_overlap = bbox_iou(detections[0, :4].unsqueeze(0), detections[:, :4]) > nms_thres
+            large_overlap = bbox_iou(detections[0, :4].unsqueeze(
+                0), detections[:, :4]) > nms_thres
             label_match = detections[0, -1] == detections[:, -1]
             # Indices of boxes with lower confidence scores, large IOUs and matching labels
             invalid = large_overlap & label_match
             weights = detections[invalid, 4:5]
             # Merge overlapping bboxes by order of confidence
-            detections[0, :4] = (weights * detections[invalid, :4]).sum(0) / weights.sum()
+            detections[0, :4] = (
+                weights * detections[invalid, :4]).sum(0) / weights.sum()
             keep_boxes += [detections[0]]
             detections = detections[~invalid]
         if keep_boxes:
@@ -266,7 +272,7 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
 
 def build_targets(pred_boxes, pred_cls, target, anchors, ignore_thres):
 
-    ByteTensor = torch.cuda.ByteTensor if pred_boxes.is_cuda else torch.ByteTensor
+    BoolTensor = torch.cuda.BoolTensor if pred_boxes.is_cuda else torch.BoolTensor
     FloatTensor = torch.cuda.FloatTensor if pred_boxes.is_cuda else torch.FloatTensor
 
     nB = pred_boxes.size(0)
@@ -275,8 +281,8 @@ def build_targets(pred_boxes, pred_cls, target, anchors, ignore_thres):
     nG = pred_boxes.size(2)
 
     # Output tensors
-    obj_mask = ByteTensor(nB, nA, nG, nG).fill_(0)
-    noobj_mask = ByteTensor(nB, nA, nG, nG).fill_(1)
+    obj_mask = BoolTensor(nB, nA, nG, nG).fill_(0)
+    noobj_mask = BoolTensor(nB, nA, nG, nG).fill_(1)
     class_mask = FloatTensor(nB, nA, nG, nG).fill_(0)
     iou_scores = FloatTensor(nB, nA, nG, nG).fill_(0)
     tx = FloatTensor(nB, nA, nG, nG).fill_(0)
@@ -314,8 +320,10 @@ def build_targets(pred_boxes, pred_cls, target, anchors, ignore_thres):
     # One-hot encoding of label
     tcls[b, best_n, gj, gi, target_labels] = 1
     # Compute label correctness and iou at best anchor
-    class_mask[b, best_n, gj, gi] = (pred_cls[b, best_n, gj, gi].argmax(-1) == target_labels).float()
-    iou_scores[b, best_n, gj, gi] = bbox_iou(pred_boxes[b, best_n, gj, gi], target_boxes, x1y1x2y2=False)
+    class_mask[b, best_n, gj, gi] = (
+        pred_cls[b, best_n, gj, gi].argmax(-1) == target_labels).float()
+    iou_scores[b, best_n, gj, gi] = bbox_iou(
+        pred_boxes[b, best_n, gj, gi], target_boxes, x1y1x2y2=False)
 
     tconf = obj_mask.float()
     return iou_scores, class_mask, obj_mask, noobj_mask, tx, ty, tw, th, tcls, tconf
