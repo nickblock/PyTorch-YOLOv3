@@ -1,0 +1,6 @@
+classes= 80
+train=data/urbanrecall/train5k.txt
+valid=data/urbanrecall/5k.txt
+names=data/coco.names
+backup=backup/
+eval=coco
