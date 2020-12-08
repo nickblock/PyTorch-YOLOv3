@@ -1,0 +1,32 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Detect COCO",
+      "type": "python",
+      "request": "launch",
+      "program": "detect.py",
+      "args": [
+        "--weights",
+        "${workspaceFolder}/checkpoints/yolov3_ckpt_60.pth",
+        "--image_folder",
+        ".\\input\\"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Train UrbanRecall",
+      "type": "python",
+      "request": "launch",
+      "program": "train.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--data_config",
+        "config/coco.data"
+      ]
+    }
+  ]
+}

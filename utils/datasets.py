@@ -1,7 +1,6 @@
 import glob
 import random
 import os
-import sys
 import numpy as np
 from PIL import Image
 import torch
@@ -26,7 +25,9 @@ def pad_to_square(img, pad_value):
 
 
 def resize(image, size):
-    image = F.interpolate(image.unsqueeze(0), size=size, mode="nearest").squeeze(0)
+    image = F.interpolate(
+        image.unsqueeze(0), size=size, mode="nearest"
+    ).squeeze(0)
     return image
 
 
@@ -57,12 +58,21 @@ class ImageFolder(Dataset):
 
 
 class ListDataset(Dataset):
-    def __init__(self, list_path, img_size=416, augment=True, multiscale=True, normalized_labels=True):
+    def __init__(
+        self,
+        list_path,
+        img_size=416,
+        augment=True,
+        multiscale=True,
+        normalized_labels=True,
+    ):
         with open(list_path, "r") as file:
             self.img_files = file.readlines()
 
         self.label_files = [
-            path.replace("images", "labels").replace(".png", ".txt").replace(".jpg", ".txt")
+            path.replace("images", "labels")
+            .replace(".png", ".txt")
+            .replace(".jpg", ".txt")
             for path in self.img_files
         ]
         self.img_size = img_size
@@ -83,7 +93,7 @@ class ListDataset(Dataset):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
 
         # Extract image as PyTorch tensor
-        img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
+        img = transforms.ToTensor()(Image.open(img_path).convert("RGB"))
 
         # Handle images with less than three channels
         if len(img.shape) != 3:
@@ -141,7 +151,9 @@ class ListDataset(Dataset):
         targets = torch.cat(targets, 0)
         # Selects new image size every tenth batch
         if self.multiscale and self.batch_count % 10 == 0:
-            self.img_size = random.choice(range(self.min_size, self.max_size + 1, 32))
+            self.img_size = random.choice(
+                range(self.min_size, self.max_size + 1, 32)
+            )
         # Resize images to input shape
         imgs = torch.stack([resize(img, self.img_size) for img in imgs])
         self.batch_count += 1
