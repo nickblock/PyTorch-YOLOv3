@@ -70,6 +70,12 @@ if __name__ == "__main__":
         help="size of each image dimension",
     )
     parser.add_argument(
+        "--label_size",
+        type=int,
+        default=1,
+        help="size of teh labels innput data. For classification a single number is used",
+    )
+    parser.add_argument(
         "--checkpoint_interval",
         type=int,
         default=1,
@@ -120,7 +126,10 @@ if __name__ == "__main__":
 
     # Get dataloader
     dataset = ListDataset(
-        train_path, augment=True, multiscale=opt.multiscale_training
+        train_path,
+        label_size=opt.label_size,
+        augment=True,
+        multiscale=opt.multiscale_training,
     )
     dataloader = DataLoader(
         dataset,

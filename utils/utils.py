@@ -310,15 +310,19 @@ def build_targets(pred_boxes, pred_cls, target, anchors, ignore_thres):
     th = FloatTensor(nB, nA, nG, nG).fill_(0)
     tcls = FloatTensor(nB, nA, nG, nG, nC).fill_(0)
 
+    label_size = target.shape[1] - 5
+
     # Convert to position relative to box
-    target_boxes = target[:, 2:6] * nG
+    target_boxes = target[:, label_size + 1 : label_size + 5] * nG
     gxy = target_boxes[:, :2]
     gwh = target_boxes[:, 2:]
     # Get anchors with best iou
     ious = torch.stack([bbox_wh_iou(anchor, gwh) for anchor in anchors])
     best_ious, best_n = ious.max(0)
     # Separate target values
-    b, target_labels = target[:, :2].long().t()
+    b, target_labels = target[:, : label_size + 1].long().t()
+
+    print("target_labels.shape = {}".format(target_labels.shape))
     gx, gy = gxy.t()
     gw, gh = gwh.t()
     gi, gj = gxy.long().t()
@@ -336,12 +340,18 @@ def build_targets(pred_boxes, pred_cls, target, anchors, ignore_thres):
     # Width and height
     tw[b, best_n, gj, gi] = torch.log(gw / anchors[best_n][:, 0] + 1e-16)
     th[b, best_n, gj, gi] = torch.log(gh / anchors[best_n][:, 1] + 1e-16)
-    # One-hot encoding of label
-    tcls[b, best_n, gj, gi, target_labels] = 1
-    # Compute label correctness and iou at best anchor
-    class_mask[b, best_n, gj, gi] = (
-        pred_cls[b, best_n, gj, gi].argmax(-1) == target_labels
-    ).float()
+
+    if label_size == 1:
+        # One-hot encoding of label
+        tcls[b, best_n, gj, gi, target_labels] = 1
+        # Compute label correctness and iou at best anchor
+        class_mask[b, best_n, gj, gi] = (
+            pred_cls[b, best_n, gj, gi].argmax(-1) == target_labels
+        ).float()
+    else:
+        tcls[b, best_n, gj, gi] = target_labels
+        # class_mask[b, best_n, gj, gi] = 1.0 - (pred_cls - tcls).abs()
+
     iou_scores[b, best_n, gj, gi] = bbox_iou(
         pred_boxes[b, best_n, gj, gi], target_boxes, x1y1x2y2=False
     )

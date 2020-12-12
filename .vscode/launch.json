@@ -18,7 +18,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Train UrbanRecall",
+      "name": "Train Yolo",
       "type": "python",
       "request": "launch",
       "program": "train.py",
@@ -26,6 +26,19 @@
       "args": [
         "--data_config",
         "config/coco.data"
+      ]
+    },
+    {
+      "name": "Train Urban",
+      "type": "python",
+      "request": "launch",
+      "program": "train.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--data_config",
+        "config/urbanrecall.data",
+        "--model_def",
+        "config/yolov3_3d.cfg"
       ]
     }
   ]

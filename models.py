@@ -179,13 +179,19 @@ class YOLOLayer(nn.Module):
             .contiguous()
         )
 
+        # label uses up first columns before box dim and after 1 additional entry(?)
+        label_size = targets.shape[1] - 5
+
         # Get outputs
         x = torch.sigmoid(prediction[..., 0])  # Center x
         y = torch.sigmoid(prediction[..., 1])  # Center y
         w = prediction[..., 2]  # Width
         h = prediction[..., 3]  # Height
         pred_conf = torch.sigmoid(prediction[..., 4])  # Conf
-        pred_cls = torch.sigmoid(prediction[..., 5:])  # Cls pred.
+        if label_size == 1:
+            pred_cls = torch.sigmoid(prediction[..., 5:])  # Cls pred.
+        else:
+            pred_cls = prediction[..., 5:]
 
         # If grid size does not match current we compute new offsets
         if grid_size != self.grid_size:
@@ -242,7 +248,15 @@ class YOLOLayer(nn.Module):
                 self.obj_scale * loss_conf_obj
                 + self.noobj_scale * loss_conf_noobj
             )
-            loss_cls = self.bce_loss(pred_cls[obj_mask], tcls[obj_mask])
+
+            print("Prediction[0] = {}".format(pred_cls[obj_mask][0]))
+            print("target[0] = {}".format(tcls[obj_mask][0]))
+
+            if label_size == 1:
+                loss_cls = self.bce_loss(pred_cls[obj_mask], tcls[obj_mask])
+            else:
+                loss_cls = self.mse_loss(pred_cls[obj_mask], tcls[obj_mask])
+
             total_loss = (
                 loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
             )

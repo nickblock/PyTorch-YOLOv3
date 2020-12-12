@@ -61,6 +61,7 @@ class ListDataset(Dataset):
     def __init__(
         self,
         list_path,
+        label_size=1,
         img_size=416,
         augment=True,
         multiscale=True,
@@ -76,6 +77,7 @@ class ListDataset(Dataset):
             for path in self.img_files
         ]
         self.img_size = img_size
+        self.label_size = label_size
         self.max_objects = 100
         self.augment = augment
         self.multiscale = multiscale
@@ -114,25 +116,37 @@ class ListDataset(Dataset):
 
         targets = None
         if os.path.exists(label_path):
-            boxes = torch.from_numpy(np.loadtxt(label_path).reshape(-1, 5))
+            boxes = torch.from_numpy(
+                np.loadtxt(label_path).reshape(-1, 4 + self.label_size)
+            )
             # Extract coordinates for unpadded + unscaled image
-            x1 = w_factor * (boxes[:, 1] - boxes[:, 3] / 2)
-            y1 = h_factor * (boxes[:, 2] - boxes[:, 4] / 2)
-            x2 = w_factor * (boxes[:, 1] + boxes[:, 3] / 2)
-            y2 = h_factor * (boxes[:, 2] + boxes[:, 4] / 2)
+            x1 = w_factor * (
+                boxes[:, self.label_size] - boxes[:, self.label_size + 2] / 2
+            )
+            y1 = h_factor * (
+                boxes[:, self.label_size + 1]
+                - boxes[:, self.label_size + 3] / 2
+            )
+            x2 = w_factor * (
+                boxes[:, self.label_size] + boxes[:, self.label_size + 2] / 2
+            )
+            y2 = h_factor * (
+                boxes[:, self.label_size + 1]
+                + boxes[:, self.label_size + 3] / 2
+            )
             # Adjust for added padding
             x1 += pad[0]
             y1 += pad[2]
             x2 += pad[1]
             y2 += pad[3]
             # Returns (x, y, w, h)
-            boxes[:, 1] = ((x1 + x2) / 2) / padded_w
-            boxes[:, 2] = ((y1 + y2) / 2) / padded_h
-            boxes[:, 3] *= w_factor / padded_w
-            boxes[:, 4] *= h_factor / padded_h
+            boxes[:, self.label_size + 0] = ((x1 + x2) / 2) / padded_w
+            boxes[:, self.label_size + 1] = ((y1 + y2) / 2) / padded_h
+            boxes[:, self.label_size + 2] *= w_factor / padded_w
+            boxes[:, self.label_size + 3] *= h_factor / padded_h
 
             targets = torch.zeros((len(boxes), 6))
-            targets[:, 1:] = boxes
+            targets[:, self.label_size :] = boxes
 
         # Apply augmentations
         if self.augment:
