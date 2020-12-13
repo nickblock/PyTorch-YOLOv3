@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Detect COCO",
+      "name": "Detect Coco",
       "type": "python",
       "request": "launch",
       "program": "detect.py",
@@ -18,7 +18,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Train Yolo",
+      "name": "Train Coco",
       "type": "python",
       "request": "launch",
       "program": "train.py",
@@ -38,7 +38,11 @@
         "--data_config",
         "config/urbanrecall.data",
         "--model_def",
-        "config/yolov3_3d.cfg"
+        "config/yolov3_3d.cfg",
+        "--label_size",
+        "3",
+        "--checkpointdir",
+        "checkpoints_urban"
       ]
     }
   ]

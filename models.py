@@ -249,9 +249,6 @@ class YOLOLayer(nn.Module):
                 + self.noobj_scale * loss_conf_noobj
             )
 
-            print("Prediction[0] = {}".format(pred_cls[obj_mask][0]))
-            print("target[0] = {}".format(tcls[obj_mask][0]))
-
             if label_size == 1:
                 loss_cls = self.bce_loss(pred_cls[obj_mask], tcls[obj_mask])
             else:

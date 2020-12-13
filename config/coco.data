@@ -1,5 +1,5 @@
 classes= 80
-train=data/coco/trainvalno5k.txt
+train=data/coco/train7.txt
 valid=data/coco/5k.txt
 names=data/coco.names
 backup=backup/

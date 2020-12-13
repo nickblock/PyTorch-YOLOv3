@@ -145,8 +145,8 @@ class ListDataset(Dataset):
             boxes[:, self.label_size + 2] *= w_factor / padded_w
             boxes[:, self.label_size + 3] *= h_factor / padded_h
 
-            targets = torch.zeros((len(boxes), 6))
-            targets[:, self.label_size :] = boxes
+            targets = torch.zeros((len(boxes), self.label_size + 5))
+            targets[:, 1:] = boxes
 
         # Apply augmentations
         if self.augment:

@@ -320,9 +320,13 @@ def build_targets(pred_boxes, pred_cls, target, anchors, ignore_thres):
     ious = torch.stack([bbox_wh_iou(anchor, gwh) for anchor in anchors])
     best_ious, best_n = ious.max(0)
     # Separate target values
-    b, target_labels = target[:, : label_size + 1].long().t()
 
-    print("target_labels.shape = {}".format(target_labels.shape))
+    if label_size == 1:
+        b, target_labels = target[:, : label_size + 1].long().t()
+    else:
+        b = target[:, 0].long()
+        target_labels = target[:, 1 : label_size + 1]
+
     gx, gy = gxy.t()
     gw, gh = gwh.t()
     gi, gj = gxy.long().t()
