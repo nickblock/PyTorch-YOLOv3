@@ -1,5 +1,5 @@
 classes=3
-train=data/urbanrecall/train5k.txt
+train=data/urbanrecall/train50k.txt
 valid=data/urbanrecall/validate.txt
 names=data/coco.names
 backup=backup/

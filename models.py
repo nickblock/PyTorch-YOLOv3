@@ -158,7 +158,7 @@ class YOLOLayer(nn.Module):
             (1, self.num_anchors, 1, 1)
         )
 
-    def forward(self, x, targets=None, img_dim=None):
+    def forward(self, x, targets=None, img_dim=None, label_size=1):
 
         # Tensors for cuda support
         FloatTensor = torch.cuda.FloatTensor if x.is_cuda else torch.FloatTensor
@@ -178,9 +178,6 @@ class YOLOLayer(nn.Module):
             .permute(0, 1, 3, 4, 2)
             .contiguous()
         )
-
-        # label uses up first columns before box dim and after 1 additional entry(?)
-        label_size = targets.shape[1] - 5
 
         # Get outputs
         x = torch.sigmoid(prediction[..., 0])  # Center x
@@ -299,7 +296,7 @@ class YOLOLayer(nn.Module):
 class Darknet(nn.Module):
     """YOLOv3 object detection model"""
 
-    def __init__(self, config_path, img_size=416):
+    def __init__(self, config_path, img_size=416, label_size=1):
         super(Darknet, self).__init__()
         self.module_defs = parse_model_config(config_path)
         self.hyperparams, self.module_list = create_modules(self.module_defs)
@@ -311,6 +308,7 @@ class Darknet(nn.Module):
         self.img_size = img_size
         self.seen = 0
         self.header_info = np.array([0, 0, 0, self.seen, 0], dtype=np.int32)
+        self.label_size = label_size
 
     def forward(self, x, targets=None):
         img_dim = x.shape[2]
@@ -333,7 +331,7 @@ class Darknet(nn.Module):
                 layer_i = int(module_def["from"])
                 x = layer_outputs[-1] + layer_outputs[layer_i]
             elif module_def["type"] == "yolo":
-                x, layer_loss = module[0](x, targets, img_dim)
+                x, layer_loss = module[0](x, targets, img_dim, self.label_size)
                 loss += layer_loss
                 yolo_outputs.append(x)
             layer_outputs.append(x)

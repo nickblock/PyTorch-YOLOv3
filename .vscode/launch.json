@@ -29,6 +29,25 @@
       ]
     },
     {
+      "name": "Detect Urban",
+      "type": "python",
+      "request": "launch",
+      "program": "detect.py",
+      "args": [
+        "--model_def",
+        "config/yolov3_3d.cfg",
+        "--label_size",
+        "3",
+        "--weights",
+        "${workspaceFolder}/checkpoints/yolov3_ckpt_latest.pth",
+        "--image_folder",
+        "./input/",
+        "--conf_thres",
+        "0.1"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Train Urban",
       "type": "python",
       "request": "launch",
@@ -39,10 +58,14 @@
         "config/urbanrecall.data",
         "--model_def",
         "config/yolov3_3d.cfg",
+        "--pretrained_weights",
+        "${workspaceFolder}/checkpoints/yolov3_ckpt_latest.pth",
         "--label_size",
         "3",
         "--checkpointdir",
-        "checkpoints_urban"
+        "checkpoints_urban",
+        "--n_cpu",
+        "16"
       ]
     }
   ]

@@ -51,6 +51,8 @@ class ImageFolder(Dataset):
         # Resize
         img = resize(img, self.img_size)
 
+        img = img[0:3, :, :]
+
         return img_path, img
 
     def __len__(self):
