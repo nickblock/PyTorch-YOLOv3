@@ -57,12 +57,21 @@ class ImageFolder(Dataset):
 
 
 class ListDataset(Dataset):
-    def __init__(self, list_path, img_size=416, augment=True, multiscale=True, normalized_labels=True):
+    def __init__(
+        self,
+        list_path,
+        img_size=416,
+        augment=True,
+        multiscale=True,
+        normalized_labels=True,
+    ):
         with open(list_path, "r") as file:
             self.img_files = file.readlines()
 
         self.label_files = [
-            path.replace("images", "labels").replace(".png", ".txt").replace(".jpg", ".txt")
+            path.replace("images", "labels")
+            .replace(".png", ".txt")
+            .replace(".jpg", ".txt")
             for path in self.img_files
         ]
         self.img_size = img_size
@@ -83,7 +92,7 @@ class ListDataset(Dataset):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
 
         # Extract image as PyTorch tensor
-        img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
+        img = transforms.ToTensor()(Image.open(img_path).convert("RGB"))
 
         # Handle images with less than three channels
         if len(img.shape) != 3:
@@ -104,7 +113,12 @@ class ListDataset(Dataset):
 
         targets = None
         if os.path.exists(label_path):
-            boxes = torch.from_numpy(np.loadtxt(label_path).reshape(-1, 5))
+            boxes = torch.from_numpy(np.loadtxt(label_path).reshape(-1, 7))
+
+            boxes = boxes[:, 2:]
+            boxes[:, 0] = 5
+
+            
             # Extract coordinates for unpadded + unscaled image
             x1 = w_factor * (boxes[:, 1] - boxes[:, 3] / 2)
             y1 = h_factor * (boxes[:, 2] - boxes[:, 4] / 2)
@@ -120,6 +134,7 @@ class ListDataset(Dataset):
             boxes[:, 2] = ((y1 + y2) / 2) / padded_h
             boxes[:, 3] *= w_factor / padded_w
             boxes[:, 4] *= h_factor / padded_h
+
 
             targets = torch.zeros((len(boxes), 6))
             targets[:, 1:] = boxes
