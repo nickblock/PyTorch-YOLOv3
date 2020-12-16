@@ -23,7 +23,9 @@
       "console": "integratedTerminal",
       "args": [
         "--data_config",
-        "config/coco.data"
+        "config/coco.data",
+        "--pretrained_weights",
+        "checkpoints/yolov3_ckpt_60.pth"
       ]
     }
   ]

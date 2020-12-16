@@ -1,6 +1,7 @@
 from __future__ import division
 
 from models import *
+
 # from utils.logger import *
 from utils.utils import *
 from utils.datasets import *
@@ -23,36 +24,67 @@ from torch.autograd import Variable
 import torch.optim as optim
 
 import warnings
+
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=Warning)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epochs", type=int, default=100,
-                        help="number of epochs")
-    parser.add_argument("--batch_size", type=int, default=8,
-                        help="size of each image batch")
-    parser.add_argument("--gradient_accumulations", type=int,
-                        default=2, help="number of gradient accums before step")
-    parser.add_argument("--model_def", type=str,
-                        default="config/yolov3.cfg", help="path to model definition file")
-    parser.add_argument("--data_config", type=str,
-                        default="config/coco.data", help="path to data config file")
-    parser.add_argument("--pretrained_weights", type=str,
-                        help="if specified starts from checkpoint model")
-    parser.add_argument("--n_cpu", type=int, default=8,
-                        help="number of cpu threads to use during batch generation")
-    parser.add_argument("--img_size", type=int, default=416,
-                        help="size of each image dimension")
-    parser.add_argument("--checkpoint_interval", type=int,
-                        default=1, help="interval between saving model weights")
-    parser.add_argument("--evaluation_interval", type=int,
-                        default=1, help="interval evaluations on validation set")
-    parser.add_argument("--compute_map", default=False,
-                        help="if True computes mAP every tenth batch")
-    parser.add_argument("--multiscale_training", default=True,
-                        help="allow for multi-scale training")
+    parser.add_argument("--epochs", type=int, default=100, help="number of epochs")
+    parser.add_argument(
+        "--batch_size", type=int, default=8, help="size of each image batch"
+    )
+    parser.add_argument(
+        "--gradient_accumulations",
+        type=int,
+        default=2,
+        help="number of gradient accums before step",
+    )
+    parser.add_argument(
+        "--model_def",
+        type=str,
+        default="config/yolov3.cfg",
+        help="path to model definition file",
+    )
+    parser.add_argument(
+        "--data_config",
+        type=str,
+        default="config/coco.data",
+        help="path to data config file",
+    )
+    parser.add_argument(
+        "--pretrained_weights",
+        type=str,
+        help="if specified starts from checkpoint model",
+    )
+    parser.add_argument(
+        "--n_cpu",
+        type=int,
+        default=8,
+        help="number of cpu threads to use during batch generation",
+    )
+    parser.add_argument(
+        "--img_size", type=int, default=416, help="size of each image dimension"
+    )
+    parser.add_argument(
+        "--checkpoint_interval",
+        type=int,
+        default=1,
+        help="interval between saving model weights",
+    )
+    parser.add_argument(
+        "--evaluation_interval",
+        type=int,
+        default=1,
+        help="interval evaluations on validation set",
+    )
+    parser.add_argument(
+        "--compute_map", default=False, help="if True computes mAP every tenth batch"
+    )
+    parser.add_argument(
+        "--multiscale_training", default=True, help="allow for multi-scale training"
+    )
     opt = parser.parse_args()
     print(opt)
 
@@ -81,8 +113,7 @@ if __name__ == "__main__":
             model.load_darknet_weights(opt.pretrained_weights)
 
     # Get dataloader
-    dataset = ListDataset(train_path, augment=True,
-                          multiscale=opt.multiscale_training)
+    dataset = ListDataset(train_path, augment=True, multiscale=opt.multiscale_training)
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=opt.batch_size,
@@ -133,18 +164,25 @@ if __name__ == "__main__":
             # ----------------
 
             log_str = "\n---- [Epoch %d/%d, Batch %d/%d] ----\n" % (
-                epoch, opt.epochs, batch_i, len(dataloader))
+                epoch,
+                opt.epochs,
+                batch_i,
+                len(dataloader),
+            )
 
             metric_table = [
-                ["Metrics", *[f"YOLO Layer {i}" for i in range(len(model.yolo_layers))]]]
+                ["Metrics", *[f"YOLO Layer {i}" for i in range(len(model.yolo_layers))]]
+            ]
 
             # Log metrics at each YOLO layer
             for i, metric in enumerate(metrics):
                 formats = {m: "%.6f" for m in metrics}
                 formats["grid_size"] = "%2d"
                 formats["cls_acc"] = "%.2f%%"
-                row_metrics = [formats[metric] % yolo.metrics.get(
-                    metric, 0) for yolo in model.yolo_layers]
+                row_metrics = [
+                    formats[metric] % yolo.metrics.get(metric, 0)
+                    for yolo in model.yolo_layers
+                ]
                 metric_table += [[metric, *row_metrics]]
 
                 # Tensorboard logging
@@ -162,7 +200,8 @@ if __name__ == "__main__":
             # Determine approximate time left for epoch
             epoch_batches_left = len(dataloader) - (batch_i + 1)
             time_left = datetime.timedelta(
-                seconds=epoch_batches_left * (time.time() - start_time) / (batch_i + 1))
+                seconds=epoch_batches_left * (time.time() - start_time) / (batch_i + 1)
+            )
             log_str += f"\n---- ETA {time_left}"
 
             print(log_str)
@@ -170,9 +209,8 @@ if __name__ == "__main__":
             model.seen += imgs.size(0)
 
         if epoch % opt.checkpoint_interval == 0:
-            torch.save(model.state_dict(),
-                       f"checkpoints/yolov3_ckpt_%d.pth" % epoch)
-                       
+            torch.save(model.state_dict(), f"checkpoints/yolov3_ckpt_%d.pth" % epoch)
+
         if epoch % opt.evaluation_interval == 0:
             print("\n---- Evaluating Model ----")
             # Evaluate the model on the validation set
