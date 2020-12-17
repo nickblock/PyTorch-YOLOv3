@@ -1,6 +1,6 @@
 classes=3
-train=data/urbanrecall/train50k.txt
-valid=data/urbanrecall/validate.txt
+train=data/urbanrecall/train50k_wsl.txt
+valid=data/urbanrecall/validate_wsl.txt
 names=data/coco.names
 backup=backup/
 eval=coco

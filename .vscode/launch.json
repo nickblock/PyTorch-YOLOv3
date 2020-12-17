@@ -59,13 +59,13 @@
         "--model_def",
         "config/yolov3_3d.cfg",
         "--pretrained_weights",
-        "${workspaceFolder}/checkpoints/yolov3_ckpt_latest.pth",
+        "${workspaceFolder}/checkpoints_urban/yolov3_ckpt_latest.pth",
         "--label_size",
         "3",
         "--checkpointdir",
         "checkpoints_urban",
-        "--n_cpu",
-        "16"
+        "--evaluation_interval",
+        "1000"
       ]
     }
   ]
