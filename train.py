@@ -250,6 +250,7 @@ if __name__ == "__main__":
                 conf_thres=0.5,
                 nms_thres=0.5,
                 img_size=opt.img_size,
+                label_size=opt.label_size,
                 batch_size=8,
             )
             evaluation_metrics = [
