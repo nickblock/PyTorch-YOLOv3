@@ -39,11 +39,11 @@
         "--label_size",
         "3",
         "--weights",
-        "${workspaceFolder}/checkpoints/yolov3_ckpt_latest.pth",
+        "${workspaceFolder}/checkpoints_urban/yolov3_ckpt_latest.pth",
         "--image_folder",
         "./input/",
         "--conf_thres",
-        "0.1"
+        "0.6"
       ],
       "console": "integratedTerminal"
     },
