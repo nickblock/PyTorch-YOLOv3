@@ -4,5 +4,5 @@ files=$(ls $1)
 
 for file in $files
 do
-  echo $2/$file
+  echo $1/$file
 done
