@@ -2,7 +2,12 @@ from __future__ import division
 
 from models import Darknet
 
-from utils.utils import load_classes, non_max_suppression, rescale_boxes
+from utils.utils import (
+    load_classes,
+    non_max_suppression,
+    rescale_boxes,
+    npnormalize,
+)
 
 from utils.datasets import ImageFolder, np, random
 
@@ -58,6 +63,12 @@ if __name__ == "__main__":
         type=float,
         default=0.4,
         help="iou thresshold for non-maximum suppression",
+    )
+    parser.add_argument(
+        "--normal_thres",
+        type=float,
+        default=0.1,
+        help="normal distnace thresshold for non-maximum suppression",
     )
     parser.add_argument(
         "--batch_size", type=int, default=1, help="size of the batches"
@@ -128,7 +139,7 @@ if __name__ == "__main__":
         with torch.no_grad():
             detections = model(input_imgs)
             detections = non_max_suppression(
-                detections, opt.conf_thres, opt.nms_thres
+                detections, opt.conf_thres, opt.nms_thres, opt.normal_thres
             )
 
         # Log progress
@@ -161,22 +172,20 @@ if __name__ == "__main__":
         if detections is not None:
             # Rescale boxes to original image
             detections = rescale_boxes(detections, opt.img_size, img.shape[:2])
-            unique_labels = detections[:, -1].cpu().unique()
-            n_cls_preds = len(unique_labels)
-            bbox_colors = random.sample(colors, n_cls_preds)
-            for x1, y1, x2, y2, conf, cls_conf, cls_pred in detections:
 
-                print(
-                    "\t+ Label: %s, Conf: %.5f"
-                    % (classes[int(cls_pred)], cls_conf.item())
+            for x1, y1, x2, y2, conf, nx, ny, nz in detections:
+
+                normal = npnormalize(np.array([nx, ny, nz]))
+                normalStr = "{:.2f}, {:.2f}, {:.2f}".format(
+                    normal[0], normal[1], normal[2]
                 )
+                print("\t+ N: %s" % normalStr)
 
                 box_w = x2 - x1
                 box_h = y2 - y1
 
-                color = bbox_colors[
-                    int(np.where(unique_labels == int(cls_pred))[0])
-                ]
+                color = (normal * 0.5) + 0.5
+
                 # Create a Rectangle patch
                 bbox = patches.Rectangle(
                     (x1, y1),
@@ -192,7 +201,7 @@ if __name__ == "__main__":
                 plt.text(
                     x1,
                     y1,
-                    s=classes[int(cls_pred)],
+                    s=normalStr,
                     color="white",
                     verticalalignment="top",
                     bbox={"color": color, "pad": 0},
